@@ -472,7 +472,7 @@ public final class CameraServer extends Handler {
 			if (DEBUG) Log.d(TAG_THREAD, "handleStartRecording:");
 			try {
 				if ((mUVCCamera == null) || (mMuxer != null)) return;
-				mMuxer = new MediaMuxerWrapper(".mp4");	// if you record audio only, ".m4a" is also OK.
+				mMuxer = new MediaMuxerWrapper(".mp4", null, null);	// if you record audio only, ".m4a" is also OK.
 //				new MediaSurfaceEncoder(mFrameWidth, mFrameHeight, mMuxer, mMediaEncoderListener);
 				new MediaSurfaceEncoder(mMuxer, mFrameWidth, mFrameHeight, mMediaEncoderListener);
 				if (true) {
