@@ -6,7 +6,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-		classpath 'com.android.tools.build:gradle:4.2.2'
+		classpath 'com.android.tools.build:gradle:7.4.0'
     }
 }
 
@@ -15,7 +15,7 @@ allprojects {
 //    	google()
 		maven { url 'https://maven.google.com' }
 		jcenter()
-		maven { url 'http://raw.github.com/saki4510t/libcommon/master/repository/' }
+		maven { url 'https://raw.github.com/saki4510t/libcommon/master/repository/' }
     }
 }
 
@@ -26,9 +26,9 @@ task clean(type: Delete) {
 ext {
 	supportLibVersion = '28.0.0'  // variable that can be referenced to keep support libs consistent
 	commonLibVersion = '5.7.0'
-	versionBuildTool = '30.0.0'
-	versionCompiler = 30
-	versionTarget = 30
+	versionBuildTool = '31.0.0'
+	versionCompiler = 31
+	versionTarget = 31
 	versionNameString = '1.0.0'
 	javaSourceCompatibility = JavaVersion.VERSION_1_8
 	javaTargetCompatibility = JavaVersion.VERSION_1_8
