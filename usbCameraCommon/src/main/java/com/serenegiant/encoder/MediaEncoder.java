@@ -72,7 +72,7 @@ public abstract class MediaEncoder implements Runnable {
     /**
      * MediaCodec instance for encoding
      */
-    protected MediaCodec mMediaCodec;				// API >= 16(Android4.1.2)
+    public MediaCodec mMediaCodec;				// API >= 16(Android4.1.2)
     /**
      * Weak refarence of MediaMuxerWarapper instance
      */

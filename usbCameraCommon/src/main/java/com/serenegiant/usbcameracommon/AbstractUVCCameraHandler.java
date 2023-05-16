@@ -29,6 +29,7 @@ import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.hardware.usb.UsbDevice;
 import android.media.AudioManager;
+import android.media.MediaCodec;
 import android.media.MediaScannerConnection;
 import android.media.SoundPool;
 import android.os.Environment;
@@ -58,10 +59,13 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
@@ -880,6 +884,61 @@ abstract class AbstractUVCCameraHandler extends Handler {
 					mCallbacks.remove(callback);
 					Log.w(TAG, e);
 				}
+			}
+		}
+		private MediaCodec.BufferInfo mBufferInfo;
+		public byte[] getEncodedData() {
+			try {
+				MediaCodec mcodec = mVideoEncoder.mMediaCodec;
+				int encoderStatus = mcodec.dequeueOutputBuffer(mBufferInfo, 10000);
+				if (encoderStatus >= 0) {
+					ByteBuffer encodedData = mcodec.getOutputBuffer(encoderStatus);
+					if (encodedData != null) {
+						byte[] bytes = new byte[mBufferInfo.size];
+						encodedData.get(bytes);
+						mcodec.releaseOutputBuffer(encoderStatus, false);
+						return bytes;
+					}
+				}
+				return null;
+			}catch (Exception e){
+				Log.w(TAG, e);
+				return null;
+			}
+		}
+
+
+		int PORT = 1234;
+		Boolean isRunning = false;
+		public void startServer(){
+			if(isRunning) return;
+
+			try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+				isRunning = true;
+				System.out.println("Server is listening on port " + PORT);
+
+				while (true) {
+					byte[] encodeData = getEncodedData();
+					if(getEncodedData() == null) continue;
+					try {
+						Socket socket = serverSocket.accept();
+						System.out.println("New client connected");
+
+						InputStream input = socket.getInputStream();
+						int bytesRead;
+
+						// Continuously read from the socket
+						while ((bytesRead = input.read(encodeData)) != -1) {
+							// Handle the received data...
+						}
+					} catch (IOException ex) {
+						System.out.println("Server exception: " + ex.getMessage());
+						ex.printStackTrace();
+					}
+				}
+			} catch (IOException ex) {
+				System.out.println("Server exception: " + ex.getMessage());
+				ex.printStackTrace();
 			}
 		}
 	}
