@@ -55,4 +55,5 @@ dependencies {
    		exclude module: 'support-v4'
    	}
 	implementation project(':libuvccamera')
+	implementation 'com.arthenica:mobile-ffmpeg-full-gpl:4.4'
 }
