@@ -642,6 +642,72 @@ abstract class AbstractUVCCameraHandler extends Handler {
 			}
 		};
 
+		static String pipe1 = "";
+		private void startFFmpegStreaming(Activity parent) {
+			pipe1 = Config.registerNewFFmpegPipe(parent.getApplicationContext());
+			if(true) return;
+//		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+//		String address = Utils.getMyMobileNetworkIpAddress();
+//		String network = sp.getString("network", "localhost");
+//		String protocol = sp.getString("protocol", "udp");
+//		int port = Integer.parseInt(sp.getString("port", "51000"));
+//		int video_bitrate = Integer.parseInt(sp.getString("video_bitrate", "256000"));
+//		int audio_bitrate = Integer.parseInt(sp.getString("audio_bitrate", "96000"));
+//		int frame_rate = Integer.parseInt(sp.getString("frame_rate", "15"));
+
+			String address = "192.168.1.22";
+			String network = "network";
+			String protocol = "tcp";
+			int port = 51000;
+			int video_bitrate = 256000;
+			int audio_bitrate = 96000;
+			int frame_rate = 15;
+
+			String outputPath = protocol + "://" +
+					(network.equals("localhost") ? "localhost" : address) +
+					":" + port +
+					(protocol.equals("tcp") ? "?listen" : "");
+
+			String ffmpegCommand = String.join(" ", new ArrayList<String>() {{
+				add("-y");
+
+				//add("-f android_camera -i 0:0");
+
+				add("-i " + pipe1);
+
+				add("-filter:v loop=loop=25*3:size=1");
+				add("-preset ultrafast");
+				add("-c:v libx264");
+				add("-b:v " + video_bitrate);
+				//add("-c:a aac");
+				//add("-b:a " + audio_bitrate);
+				add("-an");
+				add("-vf scale=-1:960");
+				add("-r " + frame_rate + " -g " + frame_rate);
+				add("-f mpegts");
+				add(outputPath);
+			}});
+
+			Log.d("FFmpeg", "FFmpeg command: " + ffmpegCommand);
+
+			AsyncTask<Void, Void, Integer> task = new AsyncTask<Void, Void, Integer>() {
+				@Override
+				protected Integer doInBackground(Void... params) {
+					return FFmpeg.execute(ffmpegCommand);
+				}
+
+				@Override
+				protected void onPostExecute(Integer result) {
+					if (result != 0) {
+						Log.e("FFmpeg", "FFmpeg streaming failed with error code: " + result);
+					}
+				}
+			};
+
+			task.execute();
+		}
+
+
 		public void handleUpdateMedia(final String path) {
 			if (DEBUG) Log.v(TAG_THREAD, "handleUpdateMedia:path=" + path);
 			final Activity parent = mWeakParent.get();
