@@ -23,14 +23,17 @@
 
 package com.serenegiant.usbcameracommon;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.hardware.usb.UsbDevice;
 import android.media.AudioManager;
+import android.media.MediaCodec;
 import android.media.MediaScannerConnection;
 import android.media.SoundPool;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
@@ -42,6 +45,8 @@ import android.view.SurfaceHolder;
 
 import androidx.annotation.Nullable;
 
+import com.arthenica.mobileffmpeg.Config;
+import com.arthenica.mobileffmpeg.FFmpeg;
 import com.serenegiant.encoder.MediaAudioEncoder;
 import com.serenegiant.encoder.MediaEncoder;
 import com.serenegiant.encoder.MediaMuxerWrapper;
@@ -57,18 +62,25 @@ import com.serenegiant.widget.CameraViewInterface;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-abstract class AbstractUVCCameraHandler extends Handler {
+public abstract class AbstractUVCCameraHandler extends Handler {
 	private static final boolean DEBUG = true;	// TODO set false on release
 	private static final String TAG = "AbsUVCCameraHandler";
 
@@ -353,9 +365,9 @@ abstract class AbstractUVCCameraHandler extends Handler {
 		}
 	}
 
-	static final class CameraThread extends Thread {
+	protected static final class CameraThread extends Thread {
 		private static final String TAG_THREAD = "CameraThread";
-		private final Object mSync = new Object();
+		public final Object mSync = new Object();
 		private final Class<? extends AbstractUVCCameraHandler> mHandlerClass;
 		private final WeakReference<Activity> mWeakParent;
 		private final WeakReference<CameraViewInterface> mWeakCameraView;
@@ -407,6 +419,7 @@ abstract class AbstractUVCCameraHandler extends Handler {
 			mWeakParent = new WeakReference<Activity>(parent);
 			mWeakCameraView = new WeakReference<CameraViewInterface>(cameraView);
 			loadShutterSound(parent);
+			startFFmpegStreaming(parent);
 		}
 
 		@Override
@@ -415,6 +428,7 @@ abstract class AbstractUVCCameraHandler extends Handler {
 			super.finalize();
 		}
 
+		@SuppressLint("SuspiciousIndentation")
 		public AbstractUVCCameraHandler getHandler() {
 			if (DEBUG) Log.v(TAG_THREAD, "getHandler:");
 			synchronized (mSync) {
@@ -630,7 +644,7 @@ abstract class AbstractUVCCameraHandler extends Handler {
 
 		private final IFrameCallback mIFrameCallback = new IFrameCallback() {
 			@Override
-			public void onFrame(final ByteBuffer frame) {
+			public void onFrame(final ByteBuffer frame) throws IOException {
 				final MediaVideoBufferEncoder videoEncoder;
 				synchronized (mSync) {
 					videoEncoder = mVideoEncoder;
@@ -818,7 +832,7 @@ abstract class AbstractUVCCameraHandler extends Handler {
 	        int streamType;
 	        try {
 	            final Class<?> audioSystemClass = Class.forName("android.media.AudioSystem");
-	            final Field sseField = audioSystemClass.getDeclaredField("STREAM_SYSTEM_ENFORCED");
+	            @SuppressLint("SoonBlockedPrivateApi") final Field sseField = audioSystemClass.getDeclaredField("STREAM_SYSTEM_ENFORCED");
 	            streamType = sseField.getInt(null);
 	        } catch (final Exception e) {
 	        	streamType = AudioManager.STREAM_SYSTEM;	// set appropriate according to your app policy
