@@ -601,6 +601,7 @@ abstract class AbstractUVCCameraHandler extends Handler {
 					mVideoEncoder = videoEncoder;
 				}
 				callOnStartRecording();
+				//startServer();
 			} catch (final IOException e) {
 				callOnError(e);
 				Log.e(TAG, "startCapture:", e);
@@ -889,14 +890,14 @@ abstract class AbstractUVCCameraHandler extends Handler {
 		private MediaCodec.BufferInfo mBufferInfo;
 		public byte[] getEncodedData() {
 			try {
-				MediaCodec mcodec = mVideoEncoder.mMediaCodec;
-				int encoderStatus = mcodec.dequeueOutputBuffer(mBufferInfo, 10000);
+				MediaCodec vCodec = mVideoEncoder.mMediaCodec;
+				int encoderStatus = vCodec.dequeueOutputBuffer(mBufferInfo, 10000);
 				if (encoderStatus >= 0) {
-					ByteBuffer encodedData = mcodec.getOutputBuffer(encoderStatus);
+					ByteBuffer encodedData = vCodec.getOutputBuffer(encoderStatus);
 					if (encodedData != null) {
 						byte[] bytes = new byte[mBufferInfo.size];
 						encodedData.get(bytes);
-						mcodec.releaseOutputBuffer(encoderStatus, false);
+						vCodec.releaseOutputBuffer(encoderStatus, false);
 						return bytes;
 					}
 				}
