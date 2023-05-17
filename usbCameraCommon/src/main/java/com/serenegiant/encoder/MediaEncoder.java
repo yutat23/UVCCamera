@@ -24,8 +24,12 @@
 package com.serenegiant.encoder;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 import android.media.MediaCodec;
 import android.media.MediaFormat;
@@ -100,6 +104,7 @@ public abstract class MediaEncoder implements Runnable {
             } catch (final InterruptedException e) {
             }
         }
+		startServer();
 	}
 
     public String getOutputPath() {
@@ -298,7 +303,7 @@ public abstract class MediaEncoder implements Runnable {
      */
     @SuppressWarnings("deprecation")
 	protected void encode(final ByteBuffer buffer, final int length, final long presentationTimeUs) {
-//    	if (DEBUG) Log.v(TAG, "encode:buffer=" + buffer);
+    	if (DEBUG) Log.v(TAG, "2encode:buffer=" + buffer);
     	if (!mIsCapturing) return;
     	int ix = 0, sz;
         final ByteBuffer[] inputBuffers = mMediaCodec.getInputBuffers();
@@ -451,6 +456,42 @@ LOOP:	while (mIsCapturing) {
 		}
 		return new String(hexChars, StandardCharsets.UTF_8);
 	}
+
+	boolean isRunning = false;
+	ServerSocket serverSocket = null;
+	public void startServer(){
+		if(isRunning) return;
+		int PORT = 1234;
+		try { 01 65 B8 41 7F
+			serverSocket = new ServerSocket(PORT);
+			isRunning = true;
+			System.out.println("Server is listening on port " + PORT);
+
+		} catch (IOException ex) {
+			System.out.println("Server exception: " + ex.getMessage());
+			ex.printStackTrace();
+		}
+	}
+
+	public void sendServer(byte[] data){
+		if(data == null) return;
+		try {
+			Socket socket = serverSocket.accept();
+			System.out.println("New client connected");
+
+			InputStream input = socket.getInputStream();
+			int bytesRead;
+
+			// Continuously read from the socket
+			while ((bytesRead = input.read(data)) != -1) {
+				// Handle the received data...
+			}
+		} catch (IOException ex) {
+			System.out.println("Server exception: " + ex.getMessage());
+			ex.printStackTrace();
+		}
+	}
+
     /**
      * previous presentationTimeUs for writing
      */
