@@ -462,7 +462,7 @@ LOOP:	while (mIsCapturing) {
 	public void startServer(){
 		if(isRunning) return;
 		int PORT = 1234;
-		try { 01 65 B8 41 7F
+		try {
 			serverSocket = new ServerSocket(PORT);
 			isRunning = true;
 			System.out.println("Server is listening on port " + PORT);
