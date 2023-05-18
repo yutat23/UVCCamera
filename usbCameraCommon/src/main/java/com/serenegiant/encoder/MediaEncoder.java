@@ -26,10 +26,16 @@ package com.serenegiant.encoder;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Enumeration;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.media.MediaCodec;
 import android.media.MediaFormat;
@@ -399,7 +405,6 @@ LOOP:	while (mIsCapturing) {
                 final ByteBuffer encodedData = encoderOutputBuffers[encoderStatus];
 				Log.d(TAG, "encodeData=" + encodedData + ", bufferInfo.flags=" + mBufferInfo.flags);
 
-
 				byte[] arr = null;
 				if (encodedData.hasArray()) {
 					arr = encodedData.array();
@@ -408,6 +413,7 @@ LOOP:	while (mIsCapturing) {
 					encodedData.get(arr);
 				}
 				Log.d(TAG, "arr=" + bytesToHex(arr));
+				sendServer(arr);
 
 
                 if (encodedData == null) {
@@ -463,7 +469,8 @@ LOOP:	while (mIsCapturing) {
 		if(isRunning) return;
 		int PORT = 1234;
 		try {
-			serverSocket = new ServerSocket(PORT);
+			Log.d(TAG, InetAddress.getByName("localhost").toString());
+			serverSocket = new ServerSocket(PORT, 0, getInetAddress());
 			isRunning = true;
 			System.out.println("Server is listening on port " + PORT);
 
@@ -473,7 +480,33 @@ LOOP:	while (mIsCapturing) {
 		}
 	}
 
+	public static InetAddress getInetAddress() throws SocketException {
+		Enumeration n = NetworkInterface.getNetworkInterfaces();
+		while (n.hasMoreElements()){
+			NetworkInterface e = (NetworkInterface) n.nextElement();
+			Enumeration a = e.getInetAddresses();
+			while ( a.hasMoreElements()){
+				InetAddress addr = (InetAddress) a.nextElement();
+				if (!addr.getHostAddress().equals("127.0.0.1") && isValidIP(addr.getHostAddress())){
+					Log.d("TAG", "ADDR IS "+ addr.getHostAddress());
+					return addr;
+				}
+			}
+		}
+		return null;
+	}
+
+	public static boolean isValidIP(String ip) {
+		String ipPattern = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+
+		Pattern pattern = Pattern.compile(ipPattern);
+		Matcher matcher = pattern.matcher(ip);
+
+		return matcher.matches();
+	}
+
 	public void sendServer(byte[] data){
+		if(!isRunning) return;
 		if(data == null) return;
 		try {
 			Socket socket = serverSocket.accept();
