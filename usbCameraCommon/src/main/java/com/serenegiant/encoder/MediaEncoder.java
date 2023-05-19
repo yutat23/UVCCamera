@@ -25,6 +25,7 @@ package com.serenegiant.encoder;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -309,7 +310,7 @@ public abstract class MediaEncoder implements Runnable {
      */
     @SuppressWarnings("deprecation")
 	protected void encode(final ByteBuffer buffer, final int length, final long presentationTimeUs) {
-    	if (DEBUG) Log.v(TAG, "2encode:buffer=" + buffer);
+    	//if (DEBUG) Log.v(TAG, "2encode:buffer=" + buffer);
     	if (!mIsCapturing) return;
     	int ix = 0, sz;
         final ByteBuffer[] inputBuffers = mMediaCodec.getInputBuffers();
@@ -403,7 +404,7 @@ LOOP:	while (mIsCapturing) {
             	if (DEBUG) Log.w(TAG, "drain:unexpected result from encoder#dequeueOutputBuffer: " + encoderStatus);
             } else {
                 final ByteBuffer encodedData = encoderOutputBuffers[encoderStatus];
-				Log.d(TAG, "encodeData=" + encodedData + ", bufferInfo.flags=" + mBufferInfo.flags);
+				//Log.d(TAG, "encodeData=" + encodedData + ", bufferInfo.flags=" + mBufferInfo.flags);
 
 				byte[] arr = null;
 				if (encodedData.hasArray()) {
@@ -463,8 +464,9 @@ LOOP:	while (mIsCapturing) {
 		return new String(hexChars, StandardCharsets.UTF_8);
 	}
 
-	boolean isRunning = false;
-	ServerSocket serverSocket = null;
+	private boolean isRunning = false;
+	private ServerSocket serverSocket;
+	private Socket clientSocket;
 	public void startServer(){
 		if(isRunning) return;
 		int PORT = 1234;
@@ -472,7 +474,9 @@ LOOP:	while (mIsCapturing) {
 			Log.d(TAG, InetAddress.getByName("localhost").toString());
 			serverSocket = new ServerSocket(PORT, 0, getInetAddress());
 			isRunning = true;
+			Log.d(TAG, "startServer isRunning=" + isRunning);
 			System.out.println("Server is listening on port " + PORT);
+			clientSocket = serverSocket.accept();
 
 		} catch (IOException ex) {
 			System.out.println("Server exception: " + ex.getMessage());
@@ -509,17 +513,14 @@ LOOP:	while (mIsCapturing) {
 		if(!isRunning) return;
 		if(data == null) return;
 		try {
-			Socket socket = serverSocket.accept();
-			System.out.println("New client connected");
-
-			InputStream input = socket.getInputStream();
-			int bytesRead;
-
-			// Continuously read from the socket
-			while ((bytesRead = input.read(data)) != -1) {
-				// Handle the received data...
+			try {
+				OutputStream os = clientSocket.getOutputStream();
+				os.write(data, 0, data.length);
+				os.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-		} catch (IOException ex) {
+		} catch (Exception ex) {
 			System.out.println("Server exception: " + ex.getMessage());
 			ex.printStackTrace();
 		}
