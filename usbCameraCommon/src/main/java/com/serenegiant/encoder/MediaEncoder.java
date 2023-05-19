@@ -310,7 +310,6 @@ public abstract class MediaEncoder implements Runnable {
      */
     @SuppressWarnings("deprecation")
 	protected void encode(final ByteBuffer buffer, final int length, final long presentationTimeUs) {
-    	//if (DEBUG) Log.v(TAG, "2encode:buffer=" + buffer);
     	if (!mIsCapturing) return;
     	int ix = 0, sz;
         final ByteBuffer[] inputBuffers = mMediaCodec.getInputBuffers();
@@ -404,7 +403,6 @@ LOOP:	while (mIsCapturing) {
             	if (DEBUG) Log.w(TAG, "drain:unexpected result from encoder#dequeueOutputBuffer: " + encoderStatus);
             } else {
                 final ByteBuffer encodedData = encoderOutputBuffers[encoderStatus];
-				//Log.d(TAG, "encodeData=" + encodedData + ", bufferInfo.flags=" + mBufferInfo.flags);
 
 				byte[] arr = null;
 				if (encodedData.hasArray()) {
