@@ -22,5 +22,6 @@
   ~  may have a different license, see the respective files.
   -->
 <resources>
-    <string name="app_name">USBCameraTest3</string>
+    <string name="app_name">CamStreamer</string>
+    <string name="action_settings">Settings</string>
 </resources>

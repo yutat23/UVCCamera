@@ -1,0 +1,62 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="@string/streaming_header">
+
+        // protocol
+        <ListPreference
+            app:defaultValue="udp"
+            app:entries="@array/protocol_entries"
+            app:entryValues="@array/protocol_values"
+            app:key="protocol"
+            app:title="@string/protocol_title"
+            app:useSimpleSummaryProvider="true" />
+
+        // network
+        <ListPreference
+            app:defaultValue="localhost"
+            app:entries="@array/network_entries"
+            app:entryValues="@array/network_entries"
+            app:key="network"
+            app:title="@string/network_title"
+            app:useSimpleSummaryProvider="true" />
+
+        // port number
+        <EditTextPreference
+            app:defaultValue="51000"
+            app:key="port"
+            app:title="@string/port_title"
+            app:useSimpleSummaryProvider="true" />
+
+        // video bitrate
+        <ListPreference
+            app:defaultValue="256000"
+            app:entries="@array/video_bitrate_entries"
+            app:entryValues="@array/video_bitrate_values"
+            app:key="video_bitrate"
+            app:title="@string/video_bitrate_title"
+            app:useSimpleSummaryProvider="true" />
+
+        // audio bitrate
+        <ListPreference
+            app:defaultValue="128000"
+            app:entries="@array/audio_bitrate_entries"
+            app:entryValues="@array/audio_bitrate_values"
+            app:key="audio_bitrate"
+            app:title="@string/audio_bitrate_title"
+            app:useSimpleSummaryProvider="true" />
+
+        // frame rate
+        <ListPreference
+            app:defaultValue="30"
+            app:entries="@array/frame_rate_entries"
+            app:entryValues="@array/frame_rate_values"
+            app:key="frame_rate"
+            app:title="@string/frame_rate_title"
+            app:useSimpleSummaryProvider="true" />
+
+
+
+    </PreferenceCategory>
+
+
+</PreferenceScreen>
