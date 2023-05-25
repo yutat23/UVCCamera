@@ -32,6 +32,7 @@ import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketImpl;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
@@ -91,7 +92,7 @@ public abstract class MediaEncoder implements Runnable {
     /**
      * BufferInfo instance for dequeuing
      */
-    private MediaCodec.BufferInfo mBufferInfo;		// API >= 16(Android4.1.2)
+    public MediaCodec.BufferInfo mBufferInfo;		// API >= 16(Android4.1.2)
 
     protected final MediaEncoderListener mListener;
 
@@ -111,7 +112,7 @@ public abstract class MediaEncoder implements Runnable {
             } catch (final InterruptedException e) {
             }
         }
-		startServer();
+		//startServer();
 	}
 
     public String getOutputPath() {
@@ -411,7 +412,7 @@ LOOP:	while (mIsCapturing) {
 					arr = new byte[encodedData.remaining()];
 					encodedData.get(arr);
 				}
-				Log.d(TAG, "arr=" + bytesToHex(arr));
+				//Log.d(TAG, "arr=" + bytesToHex(arr));
 				sendServer(arr);
 
 
@@ -463,10 +464,12 @@ LOOP:	while (mIsCapturing) {
 	}
 
 	private boolean isRunning = false;
+	private boolean isAccepted = false;
 	private ServerSocket serverSocket;
 	private Socket clientSocket;
-	public void startServer(){
-		if(isRunning) return;
+
+	public void startServer() {
+		if (isRunning) return;
 		int PORT = 1234;
 		try {
 			Log.d(TAG, InetAddress.getByName("localhost").toString());
@@ -474,7 +477,16 @@ LOOP:	while (mIsCapturing) {
 			isRunning = true;
 			Log.d(TAG, "startServer isRunning=" + isRunning);
 			System.out.println("Server is listening on port " + PORT);
-			clientSocket = serverSocket.accept();
+
+			// 新しいスレッドを作成し、そのスレッドで接続を受け入れる
+			new Thread(() -> {
+				try {
+					clientSocket = serverSocket.accept();
+					isAccepted = true;
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}).start();
 
 		} catch (IOException ex) {
 			System.out.println("Server exception: " + ex.getMessage());
@@ -508,26 +520,33 @@ LOOP:	while (mIsCapturing) {
 	}
 
 	public void sendServer(byte[] data){
-		if(!isRunning) return;
-		if(data == null) return;
-		try {
+		if (!isRunning) return;
+		while(!isAccepted){
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		if (data == null) return;
+
+		// 新しいスレッドを作成し、そのスレッドでデータを送信する
+		new Thread(() -> {
 			try {
 				OutputStream os = clientSocket.getOutputStream();
 				os.write(data, 0, data.length);
 				os.flush();
+				Log.d(TAG, "sendServer data.length=" + data.length);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		} catch (Exception ex) {
-			System.out.println("Server exception: " + ex.getMessage());
-			ex.printStackTrace();
-		}
+		}).start();
 	}
 
     /**
      * previous presentationTimeUs for writing
      */
-	private long prevOutputPTSUs = 0;
+	public long prevOutputPTSUs = 0;
 	/**
 	 * get next encoding presentationTimeUs
 	 * @return
