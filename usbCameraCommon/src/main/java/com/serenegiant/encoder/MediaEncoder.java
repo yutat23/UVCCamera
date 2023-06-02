@@ -115,6 +115,25 @@ public abstract class MediaEncoder implements Runnable {
 		//startServer();
 	}
 
+	public MediaEncoder(final MediaMuxerWrapper muxer, final MediaEncoderListener listener, int port) {
+		if (listener == null) throw new NullPointerException("MediaEncoderListener is null");
+		if (muxer == null) throw new NullPointerException("MediaMuxerWrapper is null");
+		mWeakMuxer = new WeakReference<MediaMuxerWrapper>(muxer);
+		muxer.addEncoder(this);
+		mListener = listener;
+		synchronized (mSync) {
+			// create BufferInfo here for effectiveness(to reduce GC)
+			mBufferInfo = new MediaCodec.BufferInfo();
+			// wait for starting thread
+			new Thread(this, getClass().getSimpleName()).start();
+			try {
+				mSync.wait();
+			} catch (final InterruptedException e) {
+			}
+		}
+		startServer(port);
+	}
+
     public String getOutputPath() {
     	final MediaMuxerWrapper muxer = mWeakMuxer.get();
     	return muxer != null ? muxer.getOutputPath() : null;

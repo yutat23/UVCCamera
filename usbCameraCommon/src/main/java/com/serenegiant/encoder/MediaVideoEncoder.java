@@ -48,14 +48,15 @@ public class MediaVideoEncoder extends MediaEncoder implements IVideoEncoder {
 	private static final String MIME_TYPE = "video/avc";
 	// parameters for recording
 	private final int mWidth, mHeight;
-    private static final int FRAME_RATE = 30;
+    private static final int FRAME_RATE = 5;
     private static final float BPP = 0.50f;
+	private static final int PORT =12341;
 
     private RenderHandler mRenderHandler;
     private Surface mSurface;
 
 	public MediaVideoEncoder(final MediaMuxerWrapper muxer, final int width, final int height, final MediaEncoderListener listener) {
-		super(muxer, listener);
+		super(muxer, listener, PORT);
 		if (DEBUG) Log.i(TAG, "MediaVideoEncoder: ");
 		mRenderHandler = RenderHandler.createHandler(TAG);
 		mWidth = width;

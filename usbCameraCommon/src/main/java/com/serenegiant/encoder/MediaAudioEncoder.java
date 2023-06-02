@@ -40,16 +40,20 @@ public class MediaAudioEncoder extends MediaEncoder implements IAudioEncoder {
 	private static final boolean DEBUG = true;	// TODO set false on release
 	private static final String TAG = "MediaAudioEncoder";
 
+	//private static final String MIME_TYPE = "audio/3gpp";
+    //private static final int SAMPLE_RATE = 8000;	// 44.1[KHz] is only setting guaranteed to be available on all devices.
 	private static final String MIME_TYPE = "audio/mp4a-latm";
-    private static final int SAMPLE_RATE = 44100;	// 44.1[KHz] is only setting guaranteed to be available on all devices.
+	private static final int SAMPLE_RATE = 44100;	// 44.1[KHz] is only setting guaranteed to be available on all devices.
     private static final int BIT_RATE = 64000;
 	public static final int SAMPLES_PER_FRAME = 1024;	// AAC, bytes/frame/channel
 	public static final int FRAMES_PER_BUFFER = 25; 	// AAC, frame/buffer/sec
 
+	public static final int PORT =12342;
+
     private AudioThread mAudioThread = null;
 
 	public MediaAudioEncoder(final MediaMuxerWrapper muxer, final MediaEncoderListener listener) {
-		super(muxer, listener);
+		super(muxer, listener, PORT);
 	}
 
 	@Override
@@ -66,10 +70,13 @@ public class MediaAudioEncoder extends MediaEncoder implements IAudioEncoder {
 		if (DEBUG) Log.i(TAG, "selected codec: " + audioCodecInfo.getName());
 
         final MediaFormat audioFormat = MediaFormat.createAudioFormat(MIME_TYPE, SAMPLE_RATE, 1);
-		audioFormat.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
 		audioFormat.setInteger(MediaFormat.KEY_CHANNEL_MASK, AudioFormat.CHANNEL_IN_MONO);
 		audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, BIT_RATE);
 		audioFormat.setInteger(MediaFormat.KEY_CHANNEL_COUNT, 1);
+		if(MIME_TYPE == "audio/mp4a-latm"){
+			audioFormat.setInteger(MediaFormat.KEY_IS_ADTS, 1);
+			audioFormat.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
+		}
 //		audioFormat.setLong(MediaFormat.KEY_MAX_INPUT_SIZE, inputFile.length());
 //      audioFormat.setLong(MediaFormat.KEY_DURATION, (long)durationInMs );
 		if (DEBUG) Log.i(TAG, "format: " + audioFormat);
