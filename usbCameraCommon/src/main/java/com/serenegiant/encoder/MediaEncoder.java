@@ -232,6 +232,7 @@ public abstract class MediaEncoder implements Runnable {
 			}
 			mRequestStop = true;	// for rejecting newer frame
 			mSync.notifyAll();
+			stopServer();
 	        // We can not know when the encoding and writing finish.
 	        // so we return immediately after request to avoid delay of caller thread
 		}
@@ -487,15 +488,14 @@ LOOP:	while (mIsCapturing) {
 	private ServerSocket serverSocket;
 	private Socket clientSocket;
 
-	public void startServer() {
+	public void startServer(int port) {
 		if (isRunning) return;
-		int PORT = 1234;
 		try {
 			Log.d(TAG, InetAddress.getByName("localhost").toString());
-			serverSocket = new ServerSocket(PORT, 0, getInetAddress());
+			serverSocket = new ServerSocket(port, 0, getInetAddress());
 			isRunning = true;
 			Log.d(TAG, "startServer isRunning=" + isRunning);
-			System.out.println("Server is listening on port " + PORT);
+			System.out.println("Server is listening on port " + port);
 
 			// 新しいスレッドを作成し、そのスレッドで接続を受け入れる
 			new Thread(() -> {
@@ -510,6 +510,18 @@ LOOP:	while (mIsCapturing) {
 		} catch (IOException ex) {
 			System.out.println("Server exception: " + ex.getMessage());
 			ex.printStackTrace();
+		}
+	}
+
+	public void stopServer(){
+		if (!isRunning) return;
+		try {
+			serverSocket.close();
+			isRunning = false;
+			isAccepted = false;
+			Log.d(TAG, "stopServer isRunning=" + isRunning);
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
